@@ -4,9 +4,11 @@
 # Pearcleaner-pattern uninstall: removes the .app bundle plus its caches,
 # preferences, logs, Application Support data, Containers, Saved Application
 # State, and launchd jobs. Preview + confirm, everything goes to the Trash
-# (never raw rm). Protected services (BlueBubbles, RVD/rvd-mac, Tailscale,
+# (never raw rm) for normal users; direct rm when running as root, since
+# Finder trash pops GUI auth dialogs even under sudo.
+# Protected services (BlueBubbles, RVD/rvd-mac, Tailscale,
 # KaviGuard) are never touched.
-# Requires: lib/common.sh (trash_first, confirm, klog),
+# Requires: lib/common.sh (trash_first, _use_direct_rm, confirm, klog),
 #           lib/guard.sh (guard_require),
 #           lib/cleanup.sh (_dir_size, _fmt_bytes). Sourced, not executed.
 #===============================================================================
@@ -135,7 +137,13 @@ uninstall_app() {
         echo ""
         echo "  Total reclaimable: $(_fmt_bytes "$total") (${#_LEFTOVERS[@]} leftover items + app bundle)"
         echo ""
-        if ! confirm "Uninstall \"$name\" and move ${#_LEFTOVERS[@]} leftover item(s) to Trash?"; then
+        local _uq
+        if _use_direct_rm; then
+            _uq="Uninstall \"$name\" and PERMANENTLY DELETE ${#_LEFTOVERS[@]} leftover item(s)? (root run — no Trash)"
+        else
+            _uq="Uninstall \"$name\" and move ${#_LEFTOVERS[@]} leftover item(s) to Trash?"
+        fi
+        if ! confirm "$_uq"; then
             echo "  Cancelled — nothing was removed."
             echo "UNINSTALLED=0"
             return 0
@@ -143,7 +151,13 @@ uninstall_app() {
     else
         echo "  No leftover files found — only the app bundle itself."
         echo ""
-        if ! confirm "Move \"$name\" app bundle to Trash?"; then
+        local _uq2
+        if _use_direct_rm; then
+            _uq2="PERMANENTLY DELETE \"$name\" app bundle? (root run — no Trash)"
+        else
+            _uq2="Move \"$name\" app bundle to Trash?"
+        fi
+        if ! confirm "$_uq2"; then
             echo "  Cancelled — nothing was removed."
             echo "UNINSTALLED=0"
             return 0
@@ -154,9 +168,15 @@ uninstall_app() {
     if ((${#_LEFTOVERS[@]})); then
         trash_first "${_LEFTOVERS[@]}"
     fi
-    klog "Uninstalled $name ($app): app + ${#_LEFTOVERS[@]} leftover items moved to Trash"
-    echo "UNINSTALLED=1"
-    echo "  \"$name\" uninstalled — app and leftovers moved to Trash (recoverable)."
+    if _use_direct_rm; then
+        klog "Uninstalled $name ($app): app + ${#_LEFTOVERS[@]} leftover items deleted permanently (root run)"
+        echo "UNINSTALLED=1"
+        echo "  \"$name\" uninstalled — app and leftovers deleted permanently (root run, no Trash)."
+    else
+        klog "Uninstalled $name ($app): app + ${#_LEFTOVERS[@]} leftover items moved to Trash"
+        echo "UNINSTALLED=1"
+        echo "  \"$name\" uninstalled — app and leftovers moved to Trash (recoverable)."
+    fi
 }
 
 # Installed app names (lowercase, no .app), newline-separated, built by find_orphans.
@@ -232,14 +252,26 @@ find_orphans() {
         echo ""
         echo "  Total reclaimable: $(_fmt_bytes "$total") ($n items)"
         echo ""
-        if ! confirm "Move $n orphaned item(s) to Trash?"; then
+        local _oq
+        if _use_direct_rm; then
+            _oq="PERMANENTLY DELETE $n orphaned item(s)? (root run — no Trash)"
+        else
+            _oq="Move $n orphaned item(s) to Trash?"
+        fi
+        if ! confirm "$_oq"; then
             echo "  Cancelled — nothing was removed."
             echo "ORPHANS_REMOVED=0"
         else
             trash_first "${orphans[@]}"
-            klog "Orphan scan: moved $n orphaned items to Trash ($(_fmt_bytes "$total") reclaimable)"
-            echo "ORPHANS_REMOVED=$n"
-            echo "  Moved $n orphaned item(s) to Trash."
+            if _use_direct_rm; then
+                klog "Orphan scan: deleted $n orphaned items permanently (root run, $(_fmt_bytes "$total") reclaimable)"
+                echo "ORPHANS_REMOVED=$n"
+                echo "  Deleted $n orphaned item(s) permanently (root run, no Trash)."
+            else
+                klog "Orphan scan: moved $n orphaned items to Trash ($(_fmt_bytes "$total") reclaimable)"
+                echo "ORPHANS_REMOVED=$n"
+                echo "  Moved $n orphaned item(s) to Trash."
+            fi
         fi
     else
         echo "  No orphaned leftovers found."

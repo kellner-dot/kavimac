@@ -167,12 +167,20 @@ check "_fmt_bytes 5242880"  "5.0 MB" "$(_fmt_bytes 5242880)"
 check "_fmt_bytes 2147483648" "2.0 GB" "$(_fmt_bytes 2147483648)"
 check "_dir_size missing"   "0"      "$(_dir_size /nope/nothing)"
 echo "hello" > "$FAKEHOME/doomed.txt"
-out=$(trash_first "$FAKEHOME/doomed.txt")
+out=$(KAVIGUARD_RM_MODE=trash trash_first "$FAKEHOME/doomed.txt")
 check "trash_first count"   "TRASHED_COUNT=1" "$(echo "$out" | grep TRASHED_COUNT)"
 [[ ! -e "$FAKEHOME/doomed.txt" && -n "$(ls "$FAKEHOME/.Trash"/doomed.txt.* 2>/dev/null)" ]] \
     && ok "trash_first moved file to ~/.Trash" || bad "trash_first moved file"
 grep -q "restore:" "$FAKEHOME/Library/Logs/kavimac.log" \
     && ok "klog recorded restore path" || bad "klog restore path"
+# rm-direct mode (the sudo path): deletes outright, never touches Trash
+echo "hello" > "$FAKEHOME/doomed2.txt"
+out=$(KAVIGUARD_RM_MODE=rm trash_first "$FAKEHOME/doomed2.txt")
+check "trash_first rm count" "DELETED_COUNT=1" "$(echo "$out" | grep DELETED_COUNT)"
+[[ ! -e "$FAKEHOME/doomed2.txt" && -z "$(ls "$FAKEHOME/.Trash"/doomed2.txt* 2>/dev/null)" ]] \
+    && ok "trash_first rm mode deletes directly, skips Trash" || bad "trash_first rm mode"
+KAVIGUARD_RM_MODE=rm _use_direct_rm; check "_use_direct_rm forced rm" "0" "$?"
+KAVIGUARD_RM_MODE=trash _use_direct_rm; check "_use_direct_rm forced trash" "1" "$?"
 KAVIMAC_YES=1 confirm "x" && ok "confirm honors KAVIMAC_YES=1" || bad "confirm KAVIMAC_YES"
 KAVIMAC_YES=0
 # decline path must not block on /dev/tty → run with no controlling terminal

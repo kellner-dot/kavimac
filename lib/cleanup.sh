@@ -5,11 +5,13 @@
 # Preview-by-default: run_cleanup builds a plan, shows per-item + total sizes,
 # and asks before applying (pass --yes or set KAVIMAC_YES=1 for trusted reruns).
 # Undoable-by-default: everything is trash-first via trash_first(); only
-# emptying the Trash itself uses rm. Old logs keep the 7-day rule.
+# emptying the Trash itself uses rm. When running as root (sudo), trash_first
+# deletes directly with rm instead — Finder trash would pop a GUI password
+# dialog per protected item even with sudo rights. Old logs keep the 7-day rule.
 # Never touches user documents, photos, music, or app data.
 #
 # Sourced, not executed (no shebang). lib/common.sh must be sourced first for:
-#   _dir_size, _fmt_bytes, trash_first, confirm, klog
+#   _dir_size, _fmt_bytes, trash_first, _use_direct_rm, confirm, klog
 #===============================================================================
 
 # --- Cleanup plan ------------------------------------------------------------
@@ -204,6 +206,7 @@ _plan_print() {
             rm)    status="will empty (rm)" ;;
             trash)
                 if (( size == 0 )); then status="nothing to remove"
+                elif _use_direct_rm; then status="delete (rm, root)"
                 else status="to Trash"; fi
                 ;;
         esac
@@ -237,7 +240,11 @@ _plan_apply() {
                     trash_first "${paths[@]}"
                 fi
                 echo "${key}_FREED=$size"
-                echo "  $label: freed $(_fmt_bytes "$size") (moved to Trash)"
+                if _use_direct_rm; then
+                    echo "  $label: freed $(_fmt_bytes "$size") (deleted directly as root)"
+                else
+                    echo "  $label: freed $(_fmt_bytes "$size") (moved to Trash)"
+                fi
                 (( size > 0 )) && removed+=( "$label $(_fmt_bytes "$size")" )
                 total=$(( total + size ))
                 ;;

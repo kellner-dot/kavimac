@@ -8,7 +8,9 @@
 # RVD agent, Tailscale, KaviGuard).
 #
 # Every disable is reversible: `launchctl unload` stops the job, the plist
-# moves to Trash via trash_first(), and the restore path is echoed and klog'd.
+# moves to Trash via trash_first() (deleted directly with rm when running as
+# root, since Finder trash pops GUI auth dialogs even under sudo), and the
+# restore path is echoed and klog'd.
 # Login Items are report-only (managed in System Settings > General > Login
 # Items) — there is no safe reversible CLI for them.
 #
@@ -140,8 +142,8 @@ _su_render_table() {
 }
 
 # _su_disable_entry <label> <plist> <domain> — reversible disable:
-# launchctl unload, then plist -> Trash via trash_first(). Restore path is
-# echoed and klog'd. Never call on a protected entry.
+# launchctl unload, then plist -> Trash via trash_first() (rm directly when
+# root). Restore path is echoed and klog'd. Never call on a protected entry.
 _su_disable_entry() {
     local label="$1"
     local plist="$2"
@@ -170,17 +172,23 @@ _su_disable_entry() {
         echo "  launchctl not available — skipping unload, moving plist only."
     fi
 
-    # 2. Reversible disable: plist -> Trash.
+    # 2. Reversible disable: plist -> Trash (rm directly when root).
     trash_first "$plist"
     if [[ -f "$plist" ]]; then
         echo "  WARNING: '${plist}' is still present — trash_first may have failed."
         klog "startup: FAILED to trash plist for '${label}' (${plist}); unload state above"
         return 1
     fi
-    local restore="Restore: move '${base}' from Trash back to '${orig_dir}'"
-    echo "  Disabled '${label}' — plist moved to Trash."
+    local restore
+    if _use_direct_rm; then
+        restore="Note: plist deleted permanently (root run — no Trash copy kept)"
+        echo "  Disabled '${label}' — plist deleted."
+    else
+        restore="Restore: move '${base}' from Trash back to '${orig_dir}'"
+        echo "  Disabled '${label}' — plist moved to Trash."
+    fi
     echo "  ${restore}"
-    klog "startup: disabled '${label}' (plist moved to Trash). ${restore}"
+    klog "startup: disabled '${label}'. ${restore}"
     return 0
 }
 
@@ -265,7 +273,13 @@ startup_list() {
                 klog "startup: BLOCKED disable attempt on protected entry '${dlabel}'"
                 continue
             fi
-            if ! confirm "Disable '${dlabel}'? Its plist moves to Trash (reversible)."; then
+            local _sdq
+            if _use_direct_rm; then
+                _sdq="Disable '${dlabel}'? Its plist will be DELETED (root run — not reversible via Trash)."
+            else
+                _sdq="Disable '${dlabel}'? Its plist moves to Trash (reversible)."
+            fi
+            if ! confirm "$_sdq"; then
                 echo "  Skipped '${dlabel}'."
                 continue
             fi

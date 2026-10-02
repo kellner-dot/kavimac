@@ -25,7 +25,9 @@
 # Philosophy (from KaviGuard): report first, clean safely, optimize sensibly.
 # v1.1.0 "Server Guard": every destructive action runs through the protected-
 # services whitelist (BlueBubbles, rvd-mac, Tailscale, KaviGuard) and goes to
-# Trash first — nothing is deleted without a restore path.
+# Trash first — nothing is deleted without a restore path. (Running the whole
+# script with sudo switches trash_first to direct rm: Finder trash pops a GUI
+# password dialog per protected item even with sudo rights.)
 #===============================================================================
 
 set -u
