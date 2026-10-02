@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/disk.sh — KaviMac disk space visualizer + APFS snapshot manager
+# lib/disk.sh — KaviGuard disk space visualizer + APFS snapshot manager
 # Read-only disk browser and local-snapshot lister. The only destructive step
 # is snapshots_thin, which thins Time Machine local snapshots and always
 # asks first. Never touches /System.
@@ -109,7 +109,7 @@ snapshots_thin() {
 }
 
 run_snapshots() {
-    echo "=== KaviMac Snapshot Report ==="
+    echo "=== KaviGuard Snapshot Report ==="
     echo "$(date '+%Y-%m-%d %H:%M:%S')"
     echo ""
     snapshots_list

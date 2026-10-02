@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/power.sh — KaviMac never-sleep / power-assertion verifier + fix
+# lib/power.sh — KaviGuard never-sleep / power-assertion verifier + fix
 # Philosophy: verify the server stays awake; report drift, never change anything
 # unless the user explicitly runs power_fix (kavimac.sh --fix-power).
 # Known-good baseline: AC sleep 0, autorestart 1, womp 1. Display may sleep.

@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# KaviMac — macOS tune-up & optimization for Seth's M1 MacBook Air
+# KaviGuard — macOS tune-up & optimization for Seth's M1 MacBook Air
 # Version 1.1.0 "Server Guard" | Native Apple Silicon (no Rosetta)
 #
 # Usage:
@@ -24,7 +24,7 @@
 #
 # Philosophy (from KaviGuard): report first, clean safely, optimize sensibly.
 # v1.1.0 "Server Guard": every destructive action runs through the protected-
-# services whitelist (BlueBubbles, rvd-mac, Tailscale, KaviMac) and goes to
+# services whitelist (BlueBubbles, rvd-mac, Tailscale, KaviGuard) and goes to
 # Trash first — nothing is deleted without a restore path.
 #===============================================================================
 
@@ -62,7 +62,7 @@ source "$SCRIPT_DIR/lib/maintenance.sh"
 
 banner() {
     echo "===================================================="
-    echo "  KaviMac v$VERSION \"Server Guard\" — tune-up for Seths-MacBook-Air"
+    echo "  KaviGuard v$VERSION \"Server Guard\" — tune-up for Seths-MacBook-Air"
     echo "  $(date '+%Y-%m-%d %H:%M:%S')"
     echo "===================================================="
     echo ""
@@ -75,7 +75,7 @@ usage() {
 
 # --- Full run: guardrail check first, then the standard sweep ---
 run_full() {
-    echo "=== KaviMac Full Run ==="
+    echo "=== KaviGuard Full Run ==="
     echo ""
     echo "--- Guardrail check ---"
     if ! guard_check; then
@@ -138,4 +138,4 @@ case "$mode" in
 esac
 
 echo ""
-echo "Done. KaviMac v$VERSION"
+echo "Done. KaviGuard v$VERSION"

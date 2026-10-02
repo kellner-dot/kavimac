@@ -1,8 +1,8 @@
-# KaviMac Installation
+# KaviGuard Installation
 
 ## 1. Download
 
-Get `kavimac-v1.0.0.tar.gz` from Google Drive (link from Kavi).
+Get `kaviguard-v1.1.1.tar.gz` from Google Drive (link from Kavi).
 
 ## 2. Extract
 
@@ -10,40 +10,40 @@ Double-click the `.tar.gz` in Finder, or:
 
 ```bash
 cd ~/Downloads
-tar -xzf kavimac-v1.0.0.tar.gz
+tar -xzf kaviguard-v1.1.1.tar.gz
 ```
 
 ## 3. Install
 
 ```bash
-cd ~/Downloads/kavimac
+cd ~/Downloads/kaviguard
 sudo bash install.sh
 ```
 
 The installer:
-- Copies everything to `/opt/kavimac/`
+- Copies everything to `/opt/kaviguard/`
 - Makes scripts executable
-- Installs the monitor LaunchAgent (`com.seth.kavimac`)
-- Creates `/opt/kavimac/vpn/` for future KaviVPN config
+- Installs the monitor LaunchAgent (`com.seth.kaviguard`)
+- Creates `/opt/kaviguard/vpn/` for future KaviVPN config
 
 ## 4. Run a tune-up
 
 ```bash
 # Full tune-up
-/opt/kavimac/kavimac.sh
+/opt/kaviguard/kavimac.sh
 
 # Or individual parts
-/opt/kavimac/kavimac.sh --cleanup
-/opt/kavimac/kavimac.sh --optimize
-/opt/kavimac/kavimac.sh --health
-/opt/kavimac/kavimac.sh --services
-/opt/kavimac/kavimac.sh --vpn-status
+/opt/kaviguard/kavimac.sh --cleanup
+/opt/kaviguard/kavimac.sh --optimize
+/opt/kaviguard/kavimac.sh --health
+/opt/kaviguard/kavimac.sh --services
+/opt/kaviguard/kavimac.sh --vpn-status
 ```
 
 For system cache cleanup, run with sudo:
 
 ```bash
-sudo /opt/kavimac/kavimac.sh --cleanup
+sudo /opt/kaviguard/kavimac.sh --cleanup
 ```
 
 ## 5. Monitor
@@ -54,14 +54,14 @@ Logs: `/tmp/kavimac-monitor.log`
 Check it's loaded:
 
 ```bash
-launchctl list | grep kavimac
+launchctl list | grep kaviguard
 ```
 
 ## KaviVPN (when server is deployed)
 
 1. Copy your client config from the Oracle VM:
    ```bash
-   sudo cp kavivpn.conf /opt/kavimac/vpn/
+   sudo cp kavivpn.conf /opt/kaviguard/vpn/
    ```
 2. Install WireGuard tools:
    ```bash
@@ -69,9 +69,9 @@ launchctl list | grep kavimac
    ```
 3. Connect:
    ```bash
-   source /opt/kavimac/lib/vpn.sh && vpn_connect
+   source /opt/kaviguard/lib/vpn.sh && vpn_connect
    ```
 4. Auto-connect on boot:
    ```bash
-   source /opt/kavimac/lib/vpn.sh && vpn_autoconnect on
+   source /opt/kaviguard/lib/vpn.sh && vpn_autoconnect on
    ```

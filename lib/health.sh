@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/health.sh — KaviMac health check functions
+# lib/health.sh — KaviGuard health check functions
 # Reports CPU, memory, disk, battery, network. No changes made.
 #===============================================================================
 
@@ -98,7 +98,7 @@ health_power() {
 }
 
 run_health() {
-    echo "=== KaviMac Health Check ==="
+    echo "=== KaviGuard Health Check ==="
     echo "$(date '+%Y-%m-%d %H:%M:%S')"
     echo ""
     health_cpu

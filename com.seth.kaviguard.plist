@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.seth.kavimac</string>
+    <string>com.seth.kaviguard</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/opt/kavimac/kavimac-monitor.sh</string>
+        <string>/opt/kaviguard/kavimac-monitor.sh</string>
     </array>
     <key>StartInterval</key>
     <integer>900</integer>

@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/services.sh — KaviMac service status: BlueBubbles + RVG Mac agent
+# lib/services.sh — KaviGuard service status: BlueBubbles + RVG Mac agent
 # v1.1.0: adds per-service uptime and restart-count-since-boot tracking.
 #===============================================================================
 

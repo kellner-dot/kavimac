@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/languages.sh — KaviMac language-file pruner
+# lib/languages.sh — KaviGuard language-file pruner
 # Conservative opt-in pruner: removes non-English *.lproj resource folders
 # from user and local application bundles. Report-only first, then a single
 # confirm before anything is trashed.
@@ -11,7 +11,7 @@
 _LANGUAGES_SCAN_DIRS=(/Applications "$HOME/Applications")
 
 # Basenames (case-insensitive) of apps never pruned — protected services
-_LANGUAGES_PROTECTED=(BlueBubbles Tailscale kavimac rvd)
+_LANGUAGES_PROTECTED=(BlueBubbles Tailscale kavimac kaviguard rvd)
 
 # Is this an English variant? Keep en.lproj, en_*.lproj, English.lproj.
 _is_english_lproj() {
@@ -59,7 +59,7 @@ _languages_collect() {
 
 # --- Prune non-English language folders (opt-in, report-only first) ---
 prune_languages() {
-    echo "=== KaviMac Language Pruner ==="
+    echo "=== KaviGuard Language Pruner ==="
     echo "  English variants (en.lproj, en_*.lproj, English.lproj) are always kept."
     echo "  Architecture stripping is disabled by design (it has broken apps before)."
     echo ""

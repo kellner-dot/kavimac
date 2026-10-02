@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/vpn.sh — KaviMac KaviVPN management (macOS WireGuard)
+# lib/vpn.sh — KaviGuard KaviVPN management (macOS WireGuard)
 #
 # Mirrors the Windows design in ~/workspace/seth-vpn/KAVIGUARD_INTEGRATION.md
 # but uses macOS-native tooling:
@@ -10,7 +10,7 @@
 #   - Kill switch via pf firewall anchor (full-tunnel mode only)
 #
 # Config layout (mirrors Windows C:\Tools\KaviVPN\):
-#   /opt/kavimac/vpn/
+#   /opt/kaviguard/vpn/
 #     kavivpn.conf      # client config (from add-client.sh on the Oracle VM)
 #     settings.json     # { TunnelName, AutoConnect, KillSwitchMode, ServerEndpoint }
 #
@@ -18,7 +18,7 @@
 # All functions degrade gracefully to "not configured" until then.
 #===============================================================================
 
-VPN_DIR="/opt/kavimac/vpn"
+VPN_DIR="/opt/kaviguard/vpn"
 VPN_CONF="$VPN_DIR/kavivpn.conf"
 VPN_SETTINGS="$VPN_DIR/settings.json"
 WG_IFACE="kavivpn"

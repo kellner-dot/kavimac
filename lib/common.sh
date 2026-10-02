@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/common.sh — KaviMac shared helpers
+# lib/common.sh — KaviGuard shared helpers
 # Sized reads, human byte formatting, logging, trash-first deletion, prompts.
 # Philosophy: reversible first — nothing disappears without a restore path.
 #===============================================================================
@@ -35,7 +35,7 @@ _fmt_bytes() {
     fi
 }
 
-# Append "[YYYY-MM-DD HH:MM:SS] <msg>" to the KaviMac log
+# Append "[YYYY-MM-DD HH:MM:SS] <msg>" to the KaviGuard log
 klog() {
     local msg=${1:-}
     local logdir="$HOME/Library/Logs"

@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
-# lib/guard.sh — KaviMac Server Guard: protected-services whitelist
-# The always-on services on this Mac (BlueBubbles, rvd-mac, Tailscale, KaviMac
+# lib/guard.sh — KaviGuard Server Guard: protected-services whitelist
+# The always-on services on this Mac (BlueBubbles, rvd-mac, Tailscale, KaviGuard
 # monitor) are load-bearing. Every other module must call guard_require before
 # any destructive action; guard_check verifies the whitelist is alive.
 # Philosophy: the server keeps running even if the tune-up goes wrong.
@@ -11,7 +11,7 @@
 
 # Never stop, disable, kill, or uninstall anything matching one of these
 # (case-insensitive substring match).
-GUARD_WHITELIST=("BlueBubbles" "rvd-mac" "RVD" "Tailscale" "tailscale" "KaviMac" "kavimac")
+GUARD_WHITELIST=("BlueBubbles" "rvd-mac" "RVD" "Tailscale" "tailscale" "KaviGuard" "kavimac")
 
 # guard_is_protected <name> — return 0 if <name> matches the whitelist, else 1
 guard_is_protected() {
@@ -80,19 +80,19 @@ guard_check() {
         all_up=0
     fi
 
-    # KaviMac monitor — LaunchAgent com.seth.kavimac, fallback to process match
+    # KaviGuard monitor — LaunchAgent com.seth.kaviguard, fallback to process match
     local mon_up=0
     if command -v launchctl >/dev/null 2>&1 && \
-       launchctl list com.seth.kavimac >/dev/null 2>&1; then
+       launchctl list com.seth.kaviguard >/dev/null 2>&1; then
         mon_up=1
     elif command -v pgrep >/dev/null 2>&1 && \
          pgrep -f kavimac-monitor >/dev/null 2>&1; then
         mon_up=1
     fi
     if (( mon_up )); then
-        echo "KaviMac monitor: RUNNING"
+        echo "KaviGuard monitor: RUNNING"
     else
-        echo "KaviMac monitor: DOWN"
+        echo "KaviGuard monitor: DOWN"
         all_up=0
     fi
 

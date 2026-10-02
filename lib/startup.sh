@@ -1,11 +1,11 @@
 #!/bin/bash
 #===============================================================================
-# lib/startup.sh — KaviMac startup & launchd manager (v1.1 "Server Guard")
+# lib/startup.sh — KaviGuard startup & launchd manager (v1.1 "Server Guard")
 #
 # One view of ALL login items + LaunchAgents/Daemons, with guarded interactive
 # disable. Philosophy: list first, disable only with two confirmations
 # (number + confirm), and never touch protected services (BlueBubbles, the
-# RVD agent, Tailscale, KaviMac).
+# RVD agent, Tailscale, KaviGuard).
 #
 # Every disable is reversible: `launchctl unload` stops the job, the plist
 # moves to Trash via trash_first(), and the restore path is echoed and klog'd.
@@ -191,7 +191,7 @@ _su_disable_entry() {
 # picking a number, then confirm(). Protected entries can never be disabled.
 # Emits machine-readable STARTUP_ITEMS and STARTUP_DISABLED lines.
 startup_list() {
-    echo "=== KaviMac Startup Manager ==="
+    echo "=== KaviGuard Startup Manager ==="
     echo ""
 
     # ---- 1. Login Items --------------------------------------------------

@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# kavimac-monitor.sh — KaviMac background health monitor
+# kavimac-monitor.sh — KaviGuard background health monitor
 # Runs via LaunchAgent (com.seth.kavimac.plist), logs to /tmp/kavimac-monitor.log
 # Checks: services (BlueBubbles, RVG, Tailscale), lid-close guard, disk space
 # (incl. purgeable), memory pressure.
@@ -55,13 +55,13 @@ bb_autorestart() {
         sleep 8
         if _bb_up; then
             echo 0 > "$BB_STATE" 2>/dev/null
-            notify "KaviMac" "BlueBubbles recovered after restart"
+            notify "KaviGuard" "BlueBubbles recovered after restart"
         else
             echo $((tries + 1)) > "$BB_STATE" 2>/dev/null
-            notify "KaviMac" "BlueBubbles is DOWN — restart attempt $((tries + 1)) failed"
+            notify "KaviGuard" "BlueBubbles is DOWN — restart attempt $((tries + 1)) failed"
         fi
     else
-        notify "KaviMac" "BlueBubbles is DOWN (restart attempts exhausted — needs a manual check)"
+        notify "KaviGuard" "BlueBubbles is DOWN (restart attempts exhausted — needs a manual check)"
     fi
     return 1
 }
@@ -73,7 +73,7 @@ bb_autorestart || true
 
 # 2. RVG Mac agent must be up
 if ! curl -s -o /dev/null --max-time 5 http://localhost:8899/rvd/status 2>/dev/null; then
-    notify "KaviMac" "RVG Mac agent is DOWN (port 8899)"
+    notify "KaviGuard" "RVG Mac agent is DOWN (port 8899)"
 else
     log "RVG: ok"
 fi
@@ -82,7 +82,7 @@ fi
 if lidguard_check >/dev/null 2>&1; then
     log "lidguard: ok"
 else
-    notify "KaviMac" "Lid-close guard MISSING — the server is a sleeping laptop right now"
+    notify "KaviGuard" "Lid-close guard MISSING — the server is a sleeping laptop right now"
 fi
 
 # 3. Disk space warning at 90% (with purgeable-space context)
@@ -91,9 +91,9 @@ purgeable=$(diskutil info / 2>/dev/null | grep -i "purgeable" | head -1 | sed 's
 [[ -n "$purgeable" ]] && log "purgeable: $purgeable"
 if [[ -n "$disk_pct" ]] && (( disk_pct >= 90 )); then
     if [[ -n "$purgeable" ]]; then
-        notify "KaviMac" "Disk ${disk_pct}% full ($purgeable) — run kavimac.sh --snapshots"
+        notify "KaviGuard" "Disk ${disk_pct}% full ($purgeable) — run kavimac.sh --snapshots"
     else
-        notify "KaviMac" "Disk ${disk_pct}% full — run kavimac.sh --cleanup"
+        notify "KaviGuard" "Disk ${disk_pct}% full — run kavimac.sh --cleanup"
     fi
 fi
 log "disk: ${disk_pct}%"
@@ -105,7 +105,7 @@ log "disk: ${disk_pct}%"
 swap_mb=$(sysctl -n vm.swapusage 2>/dev/null | sed -n 's/.*used = \([0-9][0-9.]*\)M.*/\1/p' | cut -d. -f1)
 [[ "$swap_mb" =~ ^[0-9]+$ ]] || swap_mb=""
 if [[ -n "$swap_mb" ]] && (( swap_mb > 2048 )); then
-    notify "KaviMac" "Heavy swap usage (${swap_mb}MB) — memory pressure high"
+    notify "KaviGuard" "Heavy swap usage (${swap_mb}MB) — memory pressure high"
 fi
 log "swap: ${swap_mb}MB"
 
@@ -117,7 +117,7 @@ if [[ -f /opt/kavimac/vpn/settings.json ]]; then
             log "KaviVPN auto-reconnect…"
             sudo wg-quick up /opt/kavimac/vpn/kavivpn.conf 2>/dev/null \
                 && log "KaviVPN reconnected" \
-                || notify "KaviMac" "KaviVPN auto-reconnect FAILED"
+                || notify "KaviGuard" "KaviVPN auto-reconnect FAILED"
         fi
     fi
 fi

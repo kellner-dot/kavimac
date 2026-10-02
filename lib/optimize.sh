@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/optimize.sh — KaviMac performance optimization (report + safe tweaks)
+# lib/optimize.sh — KaviGuard performance optimization (report + safe tweaks)
 # Philosophy: report first, only apply safe reversible changes.
 #===============================================================================
 
@@ -93,7 +93,7 @@ opt_server_tweaks() {
 }
 
 run_optimize() {
-    echo "=== KaviMac Optimization ==="
+    echo "=== KaviGuard Optimization ==="
     opt_login_items;      echo ""
     opt_spotlight;        echo ""
     opt_filevault;        echo ""

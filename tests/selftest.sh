@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# tests/selftest.sh — KaviMac v1.1.0 self-test (Linux-safe)
+# tests/selftest.sh — KaviGuard v1.1.0 self-test (Linux-safe)
 # Mocks macOS-only commands (pmset, tmutil, osascript, curl, ...) via a fake
 # bin dir prepended to PATH, then exercises the pure-bash helpers and the
 # preview/guard logic. Run: ./tests/selftest.sh
@@ -50,7 +50,7 @@ cat > "$MOCKBIN/launchctl" <<'EOF'
 # launchctl list <label> | launchctl kickstart ... | load ...
 [[ "$1" == "list" ]] || exit 0
 case "$2" in
-  com.seth.kavimac)          exit 0 ;;
+  com.seth.kaviguard)          exit 0 ;;
   com.seth.kavimac.lidguard)  [[ "${MOCK_LIDGUARD:-0}" == "1" ]] && exit 0 || exit 1 ;;
   *) exit 1 ;;
 esac

@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/maintenance.sh — KaviMac on-demand maintenance runner
+# lib/maintenance.sh — KaviGuard on-demand maintenance runner
 # Runs macOS periodic scripts and optionally rebuilds system databases.
 # Every step is individually confirmed; nothing runs automatically and
 # nothing is scheduled. DB rebuilds happen only when symptomatic.
@@ -47,7 +47,7 @@ _maintenance_verify_disk() {
         echo ""
         echo "  If the output above suggests a repair, run this yourself:"
         echo "    sudo diskutil repairVolume /"
-        echo "  KaviMac never runs repairVolume automatically."
+        echo "  KaviGuard never runs repairVolume automatically."
     else
         echo "  Skipped."
         echo "DISK_VERIFY_OK=0"
@@ -103,7 +103,7 @@ _maintenance_launchservices() {
 _maintenance_mail() {
     echo ""
     echo "--- Step 5: Mail database ---"
-    echo "  KaviMac does NOT rebuild the Mail database automatically."
+    echo "  KaviGuard does NOT rebuild the Mail database automatically."
     echo "  The Envelope Index lives at:"
     echo "    ~/Library/Mail/V10/MailData/Envelope Index"
     echo "  Manual step (only if Mail search is broken): quit Mail, move"
@@ -115,7 +115,7 @@ _maintenance_mail() {
 
 # --- Run all maintenance steps, each individually confirmed ---
 run_maintenance() {
-    echo "=== KaviMac Maintenance ==="
+    echo "=== KaviGuard Maintenance ==="
     echo "  On-demand only: nothing here is scheduled or automatic."
     echo "  Database rebuilds (Spotlight, LaunchServices) should only run"
     echo "  when something is actually broken."

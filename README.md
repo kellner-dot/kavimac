@@ -1,4 +1,4 @@
-# KaviMac v1.1.0 "Server Guard"
+# KaviGuard v1.1.0 "Server Guard"
 
 macOS tune-up, health monitoring, and optimization for Seth's M1 MacBook Air.
 The macOS equivalent of **KaviGuard** (Windows).
@@ -12,7 +12,7 @@ Tailscale). Every destructive action runs through the protected-services
 whitelist and goes to Trash first — nothing is deleted without a restore path.
 
 - **Protected-services guardrail** (`lib/guard.sh`): BlueBubbles, rvd-mac,
-  Tailscale, KaviMac can never be killed, purged, or unloaded by any KaviMac
+  Tailscale, KaviGuard can never be killed, purged, or unloaded by any KaviGuard
   action. `--guard` checks them all; the full run starts with this check.
 - **Never-sleep verifier** (`lib/power.sh`): verifies the power baseline
   (AC sleep 0, autorestart 1, womp 1) and the **lid-close guard** (a sleeping
@@ -47,7 +47,7 @@ whitelist and goes to Trash first — nothing is deleted without a restore path.
 ## What's inside
 
 ```
-kavimac/
+kaviguard/
 ├── kavimac.sh              # Main tune-up (cleanup + optimize + health)
 ├── kavimac-monitor.sh      # Background health monitor (LaunchAgent)
 ├── lib/
@@ -56,7 +56,7 @@ kavimac/
 │   ├── optimize.sh         # Login items, Spotlight, FileVault, updates, swap
 │   ├── vpn.sh              # KaviVPN management (WireGuard, macOS-native)
 │   └── services.sh         # BlueBubbles, RVG agent, Tailscale status
-├── com.seth.kavimac.plist  # LaunchAgent — monitor every 15 min
+├── com.seth.kaviguard.plist  # LaunchAgent — monitor every 15 min
 ├── INSTALL.md
 └── VERSION
 ```

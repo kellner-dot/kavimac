@@ -1,11 +1,11 @@
 #!/bin/bash
 #===============================================================================
-# lib/uninstall.sh — KaviMac complete app uninstaller + orphan scanner
+# lib/uninstall.sh — KaviGuard complete app uninstaller + orphan scanner
 # Pearcleaner-pattern uninstall: removes the .app bundle plus its caches,
 # preferences, logs, Application Support data, Containers, Saved Application
 # State, and launchd jobs. Preview + confirm, everything goes to the Trash
 # (never raw rm). Protected services (BlueBubbles, RVD/rvd-mac, Tailscale,
-# KaviMac) are never touched.
+# KaviGuard) are never touched.
 # Requires: lib/common.sh (trash_first, confirm, klog),
 #           lib/guard.sh (guard_require),
 #           lib/cleanup.sh (_dir_size, _fmt_bytes). Sourced, not executed.
@@ -27,7 +27,7 @@ _UNINSTALL_SCAN_DIRS=(
 
 # Protected services: never uninstalled, never scanned, never trashed.
 # Whole-token, case-insensitive match against a label or basename.
-_UNINSTALL_PROTECTED="bluebubbles rvd rvd-mac tailscale kavimac"
+_UNINSTALL_PROTECTED="bluebubbles rvd rvd-mac tailscale kavimac kaviguard"
 
 _uninstall_is_protected() {
     local label="$1" low tok
@@ -113,7 +113,7 @@ uninstall_app() {
         return 1
     fi
     local app="$_APP_PATH"
-    echo "=== KaviMac Uninstall: $name ==="
+    echo "=== KaviGuard Uninstall: $name ==="
     echo "  App bundle: $app ($(_fmt_bytes "$(_entry_size "$app")"))"
 
     local bid
@@ -182,7 +182,7 @@ _orphan_owner_exists() {
 
 # --- Scan for leftovers from long-removed apps ---
 find_orphans() {
-    echo "=== KaviMac Orphan Scan ==="
+    echo "=== KaviGuard Orphan Scan ==="
     echo "  Scanning app-support folders for leftovers whose apps are gone..."
 
     # Installed app names (lowercase, no .app suffix)

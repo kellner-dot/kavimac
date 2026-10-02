@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# lib/cleanup.sh — KaviMac cleanup functions (v1.1.0 "Server Guard")
+# lib/cleanup.sh — KaviGuard cleanup functions (v1.1.0 "Server Guard")
 # Safe system cleanup: caches, logs, tmp scratch, trash. Reports space freed.
 # Preview-by-default: run_cleanup builds a plan, shows per-item + total sizes,
 # and asks before applying (pass --yes or set KAVIMAC_YES=1 for trusted reruns).
@@ -277,7 +277,7 @@ run_cleanup() {
     [[ "${1:-}" == "--yes" ]] && yes=1
     [[ "${KAVIMAC_YES:-}" == "1" ]] && yes=1
 
-    echo "=== KaviMac Cleanup ==="
+    echo "=== KaviGuard Cleanup ==="
 
     # Phase 1: build the plan (no changes made)
     _plan_reset
