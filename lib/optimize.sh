@@ -53,10 +53,13 @@ opt_updates() {
 opt_memory_pressure() {
     echo "--- Memory ---"
     # M1 with 8GB: flag if swap is heavy
+    # NOTE (v1.1.0 fix): the old awk -F'[=,M]' '{print $3}' parsing grabbed the
+    # literal word "used" instead of the number, crashing under set -u.
     local swap_used
-    swap_used=$(sysctl -n vm.swapusage 2>/dev/null | awk -F'[=,M]' '{print $3}' | tr -d ' ')
+    swap_used=$(sysctl -n vm.swapusage 2>/dev/null | sed -n 's/.*used = \([0-9][0-9.]*\)M.*/\1/p' | cut -d. -f1)
+    [[ "$swap_used" =~ ^[0-9]+$ ]] || swap_used=""
     echo "  Swap used: ${swap_used:-?} MB"
-    if [[ -n "$swap_used" ]] && (( ${swap_used%.*} > 2048 )); then
+    if [[ -n "$swap_used" ]] && (( swap_used > 2048 )); then
         echo "  WARNING: heavy swap usage (>2GB) — 8GB RAM is under pressure."
         echo "  Consider closing browser tabs / heavy apps."
     fi

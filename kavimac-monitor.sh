@@ -2,16 +2,24 @@
 #===============================================================================
 # kavimac-monitor.sh — KaviMac background health monitor
 # Runs via LaunchAgent (com.seth.kavimac.plist), logs to /tmp/kavimac-monitor.log
-# Checks: services (BlueBubbles, RVG, Tailscale), disk space, memory pressure.
+# Checks: services (BlueBubbles, RVG, Tailscale), lid-close guard, disk space
+# (incl. purgeable), memory pressure.
 # Alerts via macOS notification when something is wrong.
+# v1.1.0: BlueBubbles auto-restart (max 2 tries per outage, then notify only).
 #===============================================================================
 
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG="/tmp/kavimac-monitor.log"
+BB_STATE="/tmp/kavimac-bb-restart.state"
 
 # shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/common.sh"
+# shellcheck disable=SC1091
+source "$SCRIPT_DIR/lib/power.sh"
+# shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/services.sh"
+# shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/vpn.sh"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
@@ -22,14 +30,46 @@ notify() {
     log "NOTIFY: $title — $msg"
 }
 
+_bb_up() {
+    curl -s -o /dev/null --max-time 5 http://localhost:1234/ 2>/dev/null
+}
+
+# BlueBubbles auto-restart: up to 2 attempts per outage, then notify only.
+# The counter resets the moment the service is healthy again — never a loop.
+bb_autorestart() {
+    if _bb_up; then
+        echo 0 > "$BB_STATE" 2>/dev/null
+        log "BlueBubbles: ok"
+        return 0
+    fi
+    local tries
+    tries=$(cat "$BB_STATE" 2>/dev/null || echo 0)
+    [[ "$tries" =~ ^[0-9]+$ ]] || tries=0
+    if (( tries < 2 )); then
+        log "BlueBubbles DOWN — restart attempt $((tries + 1))/2"
+        local uid
+        uid=$(id -u 2>/dev/null || echo 501)
+        launchctl kickstart "gui/$uid/com.bluebubbles.blububbles-server" 2>/dev/null \
+        || launchctl kickstart "gui/$uid/com.bluebubbles.server" 2>/dev/null \
+        || open -a BlueBubbles 2>/dev/null
+        sleep 8
+        if _bb_up; then
+            echo 0 > "$BB_STATE" 2>/dev/null
+            notify "KaviMac" "BlueBubbles recovered after restart"
+        else
+            echo $((tries + 1)) > "$BB_STATE" 2>/dev/null
+            notify "KaviMac" "BlueBubbles is DOWN — restart attempt $((tries + 1)) failed"
+        fi
+    else
+        notify "KaviMac" "BlueBubbles is DOWN (restart attempts exhausted — needs a manual check)"
+    fi
+    return 1
+}
+
 log "--- monitor run ---"
 
-# 1. BlueBubbles must be up (Seth's iMessage bridge)
-if ! curl -s -o /dev/null --max-time 5 http://localhost:1234/ 2>/dev/null; then
-    notify "KaviMac" "BlueBubbles is DOWN (port 1234)"
-else
-    log "BlueBubbles: ok"
-fi
+# 1. BlueBubbles must be up (Seth's iMessage bridge) — auto-restart, max 2 tries
+bb_autorestart || true
 
 # 2. RVG Mac agent must be up
 if ! curl -s -o /dev/null --max-time 5 http://localhost:8899/rvd/status 2>/dev/null; then
@@ -38,15 +78,32 @@ else
     log "RVG: ok"
 fi
 
-# 3. Disk space warning at 90%
+# 2b. Lid-close guard must be alive — a sleeping laptop is not a server
+if lidguard_check >/dev/null 2>&1; then
+    log "lidguard: ok"
+else
+    notify "KaviMac" "Lid-close guard MISSING — the server is a sleeping laptop right now"
+fi
+
+# 3. Disk space warning at 90% (with purgeable-space context)
 disk_pct=$(df / 2>/dev/null | awk 'NR==2{gsub(/%/,"",$5); print $5}')
+purgeable=$(diskutil info / 2>/dev/null | grep -i "purgeable" | head -1 | sed 's/^ *//')
+[[ -n "$purgeable" ]] && log "purgeable: $purgeable"
 if [[ -n "$disk_pct" ]] && (( disk_pct >= 90 )); then
-    notify "KaviMac" "Disk ${disk_pct}% full — run kavimac.sh --cleanup"
+    if [[ -n "$purgeable" ]]; then
+        notify "KaviMac" "Disk ${disk_pct}% full ($purgeable) — run kavimac.sh --snapshots"
+    else
+        notify "KaviMac" "Disk ${disk_pct}% full — run kavimac.sh --cleanup"
+    fi
 fi
 log "disk: ${disk_pct}%"
 
 # 4. Heavy swap warning (>2GB on 8GB machine)
-swap_mb=$(sysctl -n vm.swapusage 2>/dev/null | awk -F'[=,M]' '{print $3}' | tr -d ' ' | cut -d. -f1)
+# NOTE (v1.1.0 fix): the old awk -F'[=,M]' '{print $3}' parsing grabbed the
+# literal word "used" instead of the number, which crashed the monitor under
+# set -u ("unbound variable"). Parse the numeric MB after "used =" instead.
+swap_mb=$(sysctl -n vm.swapusage 2>/dev/null | sed -n 's/.*used = \([0-9][0-9.]*\)M.*/\1/p' | cut -d. -f1)
+[[ "$swap_mb" =~ ^[0-9]+$ ]] || swap_mb=""
 if [[ -n "$swap_mb" ]] && (( swap_mb > 2048 )); then
     notify "KaviMac" "Heavy swap usage (${swap_mb}MB) — memory pressure high"
 fi

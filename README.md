@@ -1,9 +1,48 @@
-# KaviMac v1.0.0
+# KaviMac v1.1.0 "Server Guard"
 
 macOS tune-up, health monitoring, and optimization for Seth's M1 MacBook Air.
 The macOS equivalent of **KaviGuard** (Windows).
 
-Native Apple Silicon — no Rosetta. Bash + Python (both ship with macOS).
+Native Apple Silicon — no Rosetta. Bash only (no new dependencies).
+
+## v1.1.0 "Server Guard" — what's new
+
+Designed around the Air's real job: **always-on server** (BlueBubbles, RVD agent,
+Tailscale). Every destructive action runs through the protected-services
+whitelist and goes to Trash first — nothing is deleted without a restore path.
+
+- **Protected-services guardrail** (`lib/guard.sh`): BlueBubbles, rvd-mac,
+  Tailscale, KaviMac can never be killed, purged, or unloaded by any KaviMac
+  action. `--guard` checks them all; the full run starts with this check.
+- **Never-sleep verifier** (`lib/power.sh`): verifies the power baseline
+  (AC sleep 0, autorestart 1, womp 1) and the **lid-close guard** (a sleeping
+  laptop is not a server). `--power` reports drift; `--fix-power` re-applies
+  (opt-in, never automatic).
+- **Preview-first cleanup** (`lib/cleanup.sh`): every sweep shows what will be
+  removed + sizes and asks first (`--yes` for trusted reruns). New targets:
+  `/private/tmp` and `/var/folders` scratch (>3 days old). All trash-first.
+- **Complete uninstaller** (`lib/uninstall.sh`): `--uninstall <App>` removes the
+  app + leftovers; `--find-orphans` finds leftovers from long-removed apps.
+- **Disk tools** (`lib/disk.sh`): `--disk [path]` size browser;
+  `--snapshots` lists APFS local snapshots + purgeable space, thins on confirm.
+- **Startup manager** (`lib/startup.sh`): one view of login items +
+  LaunchAgents/Daemons; disable is reversible (plist → Trash), whitelisted
+  services locked.
+- **Language pruner** (`lib/languages.sh`): `--prune-languages` strips
+  non-English `.lproj` (report first, opt-in). Architecture stripping is
+  disabled by design.
+- **Maintenance runner** (`lib/maintenance.sh`): `--maintenance` runs periodic
+  scripts, disk verify, and DB rebuilds — each step confirmed, never scheduled.
+- **Monitor upgrades**: BlueBubbles auto-restart (max 2 tries per outage, then
+  notify-only — never a loop), lid-close guard check, purgeable space in disk
+  warnings.
+- **Services dashboard**: `--services` now shows per-service uptime and
+  restart-count since boot.
+- **Bug fix**: the v1.0.0 `vm.swapusage` parser grabbed the word "used" instead
+  of the number, crashing the monitor under `set -u` — fixed in the monitor
+  and `opt_memory_pressure`.
+
+## v1.0.0 — original feature set (kept)
 
 ## What's inside
 
