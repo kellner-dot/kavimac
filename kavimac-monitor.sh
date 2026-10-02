@@ -12,6 +12,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG="/tmp/kavimac-monitor.log"
 BB_STATE="/tmp/kavimac-bb-restart.state"
+TS_STATE="/tmp/kavimac-ts-restart.state"
 
 # shellcheck disable=SC1091
 source "$SCRIPT_DIR/lib/common.sh"
@@ -70,6 +71,47 @@ log "--- monitor run ---"
 
 # 1. BlueBubbles must be up (Seth's iMessage bridge) — auto-restart, max 2 tries
 bb_autorestart || true
+
+# 1b. Tailscale must be up (Seth's tailnet) — auto-restart, max 2 tries
+# ROOT CAUSE (v1.1.3): Tailscale.app is a GUI app with no keep-alive. When it
+# dies (crash, logout, system hiccup), nothing restarts it. The monitor now
+# tries `open -a Tailscale` up to 2x per outage, then notifies Seth that manual
+# login may be needed (the most common reason the daemon exits immediately is
+# a missing/invalid Tailscale account login).
+ts_autorestart() {
+    if pgrep -x tailscaled >/dev/null 2>&1 || pgrep -x tailscale >/dev/null 2>&1; then
+        echo 0 > "$TS_STATE" 2>/dev/null
+        log "Tailscale: ok"
+        return 0
+    fi
+    local tries
+    tries=$(cat "$TS_STATE" 2>/dev/null || echo 0)
+    [[ "$tries" =~ ^[0-9]+$ ]] || tries=0
+    if (( tries < 2 )); then
+        log "Tailscale DOWN — restart attempt $((tries + 1))/2"
+        # Try the GUI app first (handles login state), fall back to CLI
+        open -a Tailscale 2>/dev/null
+        sleep 10
+        if pgrep -x tailscaled >/dev/null 2>&1 || pgrep -x tailscale >/dev/null 2>&1; then
+            echo 0 > "$TS_STATE" 2>/dev/null
+            notify "KaviGuard" "Tailscale recovered after restart"
+            log "Tailscale: recovered"
+        else
+            echo $((tries + 1)) > "$TS_STATE" 2>/dev/null
+            # Check if the app exists but won't stay up (likely needs login)
+            if [[ -d "/Applications/Tailscale.app" ]]; then
+                notify "KaviGuard" "Tailscale is DOWN — restart attempt $((tries + 1)) failed. May need manual login in Tailscale.app"
+            else
+                notify "KaviGuard" "Tailscale is DOWN — Tailscale.app not found in /Applications"
+            fi
+        fi
+    else
+        # Don't spam — only notify once per outage (state file already at 2)
+        log "Tailscale still DOWN (restart attempts exhausted)"
+    fi
+    return 1
+}
+ts_autorestart || true
 
 # 2. RVG Mac agent must be up
 if ! curl -s -o /dev/null --max-time 5 http://localhost:8899/rvd/status 2>/dev/null; then

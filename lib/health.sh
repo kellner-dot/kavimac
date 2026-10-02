@@ -46,12 +46,19 @@ health_disk() {
 }
 
 health_battery() {
-    local info maxcap designcap cycles condition
+    local info maxcap designcap cycles
     info=$(ioreg -rn AppleSmartBattery 2>/dev/null)
-    maxcap=$(echo "$info" | grep '"MaxCapacity"' | head -1 | awk '{print $3}')
-    designcap=$(echo "$info" | grep '"DesignCapacity"' | head -1 | awk '{print $3}')
-    cycles=$(echo "$info" | grep '"CycleCount"' | head -1 | awk '{print $3}')
-    if [[ -n "$maxcap" && -n "$designcap" && "$designcap" -gt 0 ]]; then
+    # ROOT CAUSE FIX (v1.1.3): The old code used awk '{print $3}' which breaks
+    # because ioreg has two formats:
+    #   1. Tree format: |   "CycleCount" = 45  → $3 is "=", not "45"
+    #   2. JSON blob: "BatteryData" = {...,"MaxCapacity"=100,...} → value is
+    #      embedded, not a whitespace-separated field at all.
+    # Use grep -o to extract "Key"=number patterns directly, then cut the number.
+    maxcap=$(echo "$info" | grep -o '"MaxCapacity"=[0-9]*' | head -1 | cut -d= -f2)
+    designcap=$(echo "$info" | grep -o '"DesignCapacity"=[0-9]*' | head -1 | cut -d= -f2)
+    cycles=$(echo "$info" | grep '"CycleCount"' | head -1 | sed 's/.*=[[:space:]]*//;s/[^0-9].*//')
+    # Validate numeric before arithmetic — never trust parsed output
+    if [[ "$maxcap" =~ ^[0-9]+$ && "$designcap" =~ ^[0-9]+$ && "$designcap" -gt 0 ]]; then
         local health_pct
         health_pct=$(( maxcap * 100 / designcap ))
         echo "Battery: ${health_pct}% health | ${cycles:-?} cycles"
